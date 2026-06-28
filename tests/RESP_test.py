@@ -21,7 +21,7 @@ def test_parseError(raw, expected):
 
 @pytest.mark.parametrize("raw, expected", [
     (":123\r\n", 123),
-    (":-123\r\n", 123), 
+    (":-123\r\n", -123), 
 ])
 def test_parseInteger(raw, expected):
     assert parseInteger(raw) == expected

@@ -28,10 +28,7 @@ def parseError(input):
 def parseInteger(input):
     if input[0] != ':' and input[-2:] != CRLF:
         raise ValueError("Incorrect format for type: Integer")
-    sign = 1
-    if input[1] == '-' or input[1] == '+':
-        sign = -1 if input[1] == '-' else 1 
-    return sign * int(input[1:-2])
+    return int(input[1:-2])
 
 def deriveLength(input, start):
     lengthNum = ""
