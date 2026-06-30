@@ -1,6 +1,7 @@
 # Common values
 CRLF = '\r\n'
 
+# ------------------- ENCODER --------------------------
 def parse(input):
     identifier = input[0]
     if identifier == '+':
@@ -13,6 +14,7 @@ def parse(input):
         return parseArray(input)
     if identifier == ':':
         return parseInteger(input)
+    return input
 
 def parseString(input):
     if input[0] != '+' and input[-2:] != CRLF:
@@ -62,12 +64,16 @@ def parseBulkString(input):
     return bulkString
 
 def findEnd(input):
+    if input.find(CRLF) == -1:
+        raise ValueError("Malformed input")
     if input[0] in "+-:" or input == '$-1\r\n':
         return input.find(CRLF) + 1
     if input[0] == '$':
         if input.startswith("$0\r\n\r\n"):
             return 5
         firstCRLFLoc = input.find(CRLF) + 1
+        if input[firstCRLFLoc + 2: ].find(CRLF) == -1:
+            raise ValueError("Malformed input")
         return firstCRLFLoc + 2 + input[firstCRLFLoc + 2: ].find(CRLF) + 1
 
 def parseArray(input):
@@ -78,6 +84,7 @@ def parseArray(input):
     # parse out number of elements using split with \r\n as the delimiter
     cleanedInput = input[endOfLenIndex:]
     outputArr = []
+    prevIndex = 0
     index = 0 
     commands = ('+', '*', '-', ':', '$')
     while index < len(cleanedInput) and numElements > 0: 
@@ -96,9 +103,44 @@ def parseArray(input):
                 index += endOfElem + 1
             numElements -= 1
             outputArr.append(element)
-        
-    return outputArr, index
+        if index == prevIndex:
+            raise ValueError("Malformed Input")
+    return outputArr, endOfLenIndex + index
 
-print(parseArray("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"))
-print(parseArray("*2\r\n$12\r\nabcde673jelz\r\n:3\r\n"))
-print(parseArray("*3\r\n:1\r\n*2\r\n+foo\r\n+bar\r\n*1\r\n*2\r\n:10\r\n:20\r\n"))
+# print(parseArray("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"))
+# print(parseArray("*2\r\n$12\r\nabcde673jelz\r\n:3\r\n"))
+# print(parseArray("*3\r\n:1\r\n*2\r\n+foo\r\n+bar\r\n*1\r\n*2\r\n:10\r\n:20\r\n"))
+
+
+# ------------------- ENCODER --------------------------
+
+# def encodeString(input):
+#     return "+" + input + CRLF
+
+# def encodeError(input):
+#     return "-" + input + CRLF 
+
+def encodeInteger(input):
+    return ":" + str(input) + CRLF
+
+def encodeBulkString(input):
+    if input == None:
+        return "$-1\r\n"
+    return "$" + str(len(input)) + CRLF + input + CRLF 
+
+def encodeArray(input):
+    output = "*" + str(len(input)) + CRLF
+    for elem in input:
+        
+        if isinstance(elem, str):
+            output +=encodeBulkString(elem)
+        elif isinstance(elem, list):
+            output += encodeArray(elem)
+        elif isinstance(elem, int):
+            output += encodeInteger(elem)
+        elif elem is None:
+            output += encodeBulkString(None)
+        else:
+            raise ValueError("Malformed array")
+    return output
+

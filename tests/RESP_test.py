@@ -1,5 +1,6 @@
 import pytest
 from RESP import parseString, parseError, parseInteger, parseArray, parseBulkString, findEnd
+from RESP import encodeInteger, encodeArray, encodeBulkString
 
 @pytest.mark.parametrize("raw, expected", [
     ("+OK\r\n", "OK"),
@@ -75,7 +76,43 @@ def test_parseArray(raw, expected):
 ])
 def test_findEnd(raw, expected):
     assert findEnd(raw) == expected
-    
+
+
+@pytest.mark.parametrize("value, expected", [
+    (123, ":123\r\n"),
+    (-123, ":-123\r\n"),
+])
+def test_encodeInteger(value, expected):
+    assert encodeInteger(value) == expected
+
+
+@pytest.mark.parametrize("value, expected", [
+    ("abcde673jelz", "$12\r\nabcde673jelz\r\n"),
+    ("abc", "$3\r\nabc\r\n"),
+    ("", "$0\r\n\r\n"),
+])
+def test_encodeBulkString(value, expected):
+    assert encodeBulkString(value) == expected
+
+
+@pytest.mark.parametrize("value, expected", [
+    (["abcde673jelz", 3], "*2\r\n$12\r\nabcde673jelz\r\n:3\r\n"),
+    (["hello", "world"], "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
+    ([1, ["foo", "bar"], [[10, 20]]], "*3\r\n:1\r\n*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n*1\r\n*2\r\n:10\r\n:20\r\n"),
+    ([], "*0\r\n"),
+    ([1, 2, 3], "*3\r\n:1\r\n:2\r\n:3\r\n"),
+    (["", "OK"], "*2\r\n$0\r\n\r\n$2\r\nOK\r\n"),
+    (["OK", "ERR bad thing", 123, "hello"], "*4\r\n$2\r\nOK\r\n$13\r\nERR bad thing\r\n:123\r\n$5\r\nhello\r\n"),
+    ([[], []], "*2\r\n*0\r\n*0\r\n"),
+    ([["one"], [2, 3], ["four", "five", "six"]], "*3\r\n*1\r\n$3\r\none\r\n*2\r\n:2\r\n:3\r\n*3\r\n$4\r\nfour\r\n$4\r\nfive\r\n$3\r\nsix\r\n"),
+    ([[[["deep"]]]], "*1\r\n*1\r\n*1\r\n*1\r\n$4\r\ndeep\r\n"),
+    (["hello world", ["foo", "bar"]], "*2\r\n$11\r\nhello world\r\n*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"),
+    ([0, -1, 999999, "", "END"], "*5\r\n:0\r\n:-1\r\n:999999\r\n$0\r\n\r\n$3\r\nEND\r\n"),
+    ([["foo", 10], ["bar", 20], ["baz", 30]], "*3\r\n*2\r\n$3\r\nfoo\r\n:10\r\n*2\r\n$3\r\nbar\r\n:20\r\n*2\r\n$3\r\nbaz\r\n:30\r\n"),
+    ([[1, 2, 3], [["yes", "no"], ["test"]]], "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n*2\r\n$3\r\nyes\r\n$2\r\nno\r\n*1\r\n$4\r\ntest\r\n"),
+])
+def test_encodeArray(value, expected):
+    assert encodeArray(value) == expected
 
 '''
 handling array
