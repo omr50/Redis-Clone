@@ -1,7 +1,7 @@
 from Key_Store import get, set, keyStore
-from threading import timer
 from timer_callbacks import expireKey
 from threading import Timer
+import time
 
 def handlePing(command):
     return "PONG"
@@ -29,16 +29,53 @@ def handleSet(command):
                     if i == len(args) - 1:
                         return "Incorrectly formatted: missing arguments"
                     if args[i] == "EX":
-                        expiryTime = int(command[i + 1])
-                        set(command[1], command[2])
-                        Timer(expiryTime, expireKey, args=[expiryTime])
+                        key, value = command[1], command[2]
+                        expiryTime = int(args[i + 1])
+                        set(key, value)
+                        Timer(expiryTime, expireKey, args=[key]).start()
                         return "OK"
+        elif "PX" in args:
+            if len(command) >= 5:
+                for i in range(len(args)):
+                    if i == len(args) - 1:
+                        return "Incorrectly formatted: missing arguments"
+                    if args[i] == "PX":
+                        key, value = command[1], command[2]
+                        expiryTime = int(args[i + 1])
+                        set(key, value)
+                        Timer(expiryTime / 1000, expireKey, args=[key]).start()
+                        return "OK"
+        elif "EXAT" in args:
+            if len(command) >= 5:
+                for i in range(len(args)):
+                    if i == len(args) - 1:
+                        return "Incorrectly formatted: missing arguments"
+                    if args[i] == "EXAT":
+                        key, value = command[1], command[2]
+                        expiryTime =  int(args[i + 1]) - int(time.time())
+                        if expiryTime < 0:
+                            return "Cannot set expire time in past"
+                        set(key, value)
+                        Timer(expiryTime, expireKey, args=[key]).start()
+                        return "OK"
+        elif "PXAT" in args:
+            if len(command) >= 5:
+                for i in range(len(args)):
+                    if i == len(args) - 1:
+                        return "Incorrectly formatted: missing arguments"
+                    if args[i] == "PXAT":
+                        key, value = command[1], command[2]
+                        expiryTime =  int(args[i + 1]) / 1000 - int(time.time())
+                        print(expiryTime)
+                        if expiryTime < 0:
+                            return "Cannot set expire time in past"
+                        set(key, value)
+                        Timer(expiryTime, expireKey, args=[key]).start()
+                        return "OK"
+
             else: 
                 return "Incorrectly formatted: missing arguments"
-        if "EX" == command[3]:
 
-    set(command[1], command[2])
-    return "OK" 
 
 def handleGet(command):
     if len(command) != 2:
