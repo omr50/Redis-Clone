@@ -1,6 +1,6 @@
 # TCP Client
 import socket
-from RESP import encodeArray, parseArray
+from RESP import encodeArray, parse, encode
 
 HOST = "127.0.0.1"
 PORT = 6379
@@ -14,8 +14,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             break
         
         messageArray = message.split()
-        respArray = encodeArray(messageArray)
+        respArray = encode(messageArray)
         sock.sendall(respArray.encode())
         response = sock.recv(4096)
-
-        print(parseArray(response.decode()))
+        
+        print(parse(response.decode()))

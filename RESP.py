@@ -119,6 +119,17 @@ def parseArray(input):
 
 # def encodeError(input):
 #     return "-" + input + CRLF 
+def encode(input):
+    if isinstance(input, str):
+        return encodeBulkString(input)
+    elif isinstance(input, list):
+        return encodeArray(input)
+    elif isinstance(input, int):
+        return encodeInteger(input)
+    elif input is None:
+        return encodeBulkString(None)
+    else:
+        raise ValueError("Malformed array")
 
 def encodeInteger(input):
     return ":" + str(input) + CRLF
@@ -131,16 +142,6 @@ def encodeBulkString(input):
 def encodeArray(input):
     output = "*" + str(len(input)) + CRLF
     for elem in input:
-        
-        if isinstance(elem, str):
-            output +=encodeBulkString(elem)
-        elif isinstance(elem, list):
-            output += encodeArray(elem)
-        elif isinstance(elem, int):
-            output += encodeInteger(elem)
-        elif elem is None:
-            output += encodeBulkString(None)
-        else:
-            raise ValueError("Malformed array")
+        output += encode(elem)
     return output
 

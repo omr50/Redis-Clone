@@ -1,15 +1,17 @@
 import asyncio
-from RESP import parse, parseArray, encodeArray
+from RESP import parse, parseArray, encode
 from commands import executeCommand
 
 async def handle_client(reader, writer):
     addr = writer.get_extra_info("peername")
-    print("connected by", addr)
+    # print("connected by", addr)
     buffer = ""
     command = ""
 
     while True:
         chunk = await reader.read(4096)
+        if not chunk:
+            break
         try:
             buffer += chunk.decode()
             parsedArray, end = parseArray(buffer)
@@ -20,7 +22,7 @@ async def handle_client(reader, writer):
                 command = parsedArray
                 buffer = buffer[end:]
             res = executeCommand(command)
-            encodedRes = encodeArray(res)
+            encodedRes = encode(res)
             writer.write(encodedRes.encode())
             await writer.drain()
         except Exception as e:

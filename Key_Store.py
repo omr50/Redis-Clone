@@ -2,7 +2,9 @@ keyStore = {}
 
 
 def get(key):
-    return keyStore[key]
+    if key in keyStore:
+        return keyStore[key]
+    return None
 
 def set(key, value):
     keyStore[key] = value
