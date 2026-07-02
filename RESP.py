@@ -1,7 +1,7 @@
 # Common values
 CRLF = '\r\n'
 
-# ------------------- ENCODER --------------------------
+# ------------------- DECODER --------------------------
 def parse(input):
     identifier = input[0]
     if identifier == '+':
@@ -11,7 +11,7 @@ def parse(input):
     if identifier == '$':
         return parseBulkString(input)
     if identifier == '*':
-        return parseArray(input)
+        return parseArray(input)[0]
     if identifier == ':':
         return parseInteger(input)
     return input
